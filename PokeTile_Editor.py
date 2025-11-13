@@ -43,6 +43,30 @@ etiqueta_titulo.grid(row=0, column=0, columnspan=2, pady=10)
 canvas_tiles = Canvas(panel_canvas, bg="#ffffff")
 canvas_tiles.pack(fill=BOTH, expand=True)  # pack dentro de frame está bien
 
+# Analisis de paleta de colores
+def extraer_paleta(img):
+    # Convertir imagen a modo 'P' (paleta) para simplificar
+    if img.mode != 'P':
+        img = img.convert('P', palette=Image.ADAPTIVE, colors=16)  # máximo 16 colores
+    colores = img.getcolors(maxcolors=256)  # [(count, color_index), ...]
+    palette = img.getpalette()  # lista de valores RGB
+    colores_rgb = []
+    for count, color_index in colores:
+        r = palette[color_index*3]
+        g = palette[color_index*3+1]
+        b = palette[color_index*3+2]
+        colores_rgb.append((r, g, b))
+    return colores_rgb
+
+def mostrar_paleta(colores):
+    for widget in panel_paleta.winfo_children():
+        if isinstance(widget, Canvas):
+            widget.destroy()  # limpiar paleta anterior
+    
+    for i, color in enumerate(colores):
+        c = Canvas(panel_paleta, width=30, height=30, bg='#%02x%02x%02x' % color)
+        c.pack(pady=2)
+
 # =========================
 # Funciones
 # =========================
@@ -51,10 +75,16 @@ def abrir_tileset():
     if not ruta:
         return
     img = Image.open(ruta)
+    
+    # Mostrar en canvas central
     tk_img = ImageTk.PhotoImage(img)
     canvas_tiles.delete("all")
     canvas_tiles.create_image(0, 0, anchor=NW, image=tk_img)
     canvas_tiles.image = tk_img
+    
+    # Extraer y mostrar paleta
+    colores = extraer_paleta(img)
+    mostrar_paleta(colores)
 
 def mostrar_tamano():
     ventana_principal.update_idletasks()
