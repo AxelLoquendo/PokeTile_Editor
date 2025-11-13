@@ -1,81 +1,98 @@
 from tkinter import *
 from tkinter import filedialog
-from PIL import Image, ImageTk  # para mostrar tiles más adelante
+from PIL import Image, ImageTk
 
 # =========================
 # Ventana principal
 # =========================
 ventana_principal = Tk()
 ventana_principal.title("PokeTile_Editor")
-ventana_principal.geometry("1200x800")           # tamaño inicial
-ventana_principal.minsize(width=300, height=400) # tamaño mínimo
-ventana_principal.config(padx=35, pady=35)
-
-# Abrir maximizada
+ventana_principal.geometry("1200x800")           
+ventana_principal.minsize(800, 600) 
+ventana_principal.config(padx=10, pady=10)
 ventana_principal.state("zoomed")
+
+# =========================
+# Frames para interfaz
+# =========================
+# Panel izquierdo (paleta)
+panel_paleta = Frame(ventana_principal, width=200, bg="#d0d0d0")
+panel_paleta.grid(row=1, column=0, sticky="ns")  # grid en ventana principal
+
+# Panel derecho (canvas de tiles)
+panel_canvas = Frame(ventana_principal, bg="#f0f0f0")
+panel_canvas.grid(row=1, column=1, sticky="nsew")  # expandible
+
+# Configurar pesos para que el canvas se expanda
+ventana_principal.grid_columnconfigure(1, weight=1)
+ventana_principal.grid_rowconfigure(1, weight=1)
 
 # =========================
 # Título
 # =========================
 etiqueta_titulo = Label(
     ventana_principal, 
-    text="Editor de Tiles", 
+    text="PokeTile_Editor", 
     font=("Arial", 24)
 )
 etiqueta_titulo.grid(row=0, column=0, columnspan=2, pady=10)
 
 # =========================
+# Canvas donde se mostrarán los tiles
+# =========================
+canvas_tiles = Canvas(panel_canvas, bg="#ffffff")
+canvas_tiles.pack(fill=BOTH, expand=True)  # pack dentro de frame está bien
+
+# =========================
 # Funciones
 # =========================
 def abrir_tileset():
-    ruta = filedialog.askopenfilename(
-        filetypes=[("PNG Files", "*.png")]
-    )
-    if ruta:
-        print("Archivo seleccionado:", ruta)
-        # Aquí se puede llamar a tu función de procesamiento de tiles
-        # procesar_tiles(ruta)
+    ruta = filedialog.askopenfilename(filetypes=[("PNG Files", "*.png")])
+    if not ruta:
+        return
+    img = Image.open(ruta)
+    tk_img = ImageTk.PhotoImage(img)
+    canvas_tiles.delete("all")
+    canvas_tiles.create_image(0, 0, anchor=NW, image=tk_img)
+    canvas_tiles.image = tk_img
 
 def mostrar_tamano():
-    ventana_principal.update_idletasks()  # actualizar geometría
+    ventana_principal.update_idletasks()
     ancho = ventana_principal.winfo_width()
     alto = ventana_principal.winfo_height()
     print("Ancho:", ancho, "Alto:", alto)
 
 # =========================
-# Botón para abrir tileset
+# Botones y panel lateral
 # =========================
-boton_abrir = Button(
-    ventana_principal,
-    text="Abrir Tileset",
-    command=abrir_tileset,
-    font=("Arial", 14)
-)
-boton_abrir.grid(row=1, column=0, pady=10)
+boton_abrir = Button(panel_paleta, text="Abrir Tileset", command=abrir_tileset)
+boton_abrir.pack(pady=10, padx=10)
+
+Label(panel_paleta, text="Paleta", bg="#d0d0d0", font=("Arial", 14)).pack(pady=20)
 
 # =========================
 # Espacio para resultados (Texto)
 # =========================
 text_result = Text(
-    ventana_principal,
-    height=20,
+    panel_canvas,
+    height=10,
     width=80
 )
-text_result.grid(row=2, column=0, columnspan=2, pady=10)
+text_result.pack(fill=X, pady=10)
 
 # =========================
-# Canvas para preview de tiles (opcional)
+# Canvas para preview de tiles
 # =========================
 canvas_preview = Canvas(
-    ventana_principal,
+    panel_canvas,
     width=800,
     height=400,
     bg="white"
 )
-canvas_preview.grid(row=3, column=0, columnspan=2, pady=10)
+canvas_preview.pack(fill=BOTH, expand=True, pady=10)
 
 # =========================
-# Ejecutar función para medir tamaño real
+# Ejecutar función para medir tamaño
 # =========================
 ventana_principal.after(100, mostrar_tamano)
 
